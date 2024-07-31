@@ -62,42 +62,13 @@ def remove_background():
         app.logger.error(f"Failed to process image: {e}", exc_info=True)
         return "Failed to process image!", 500
 
-
-# def get_image_list(directory):
-#     image_list = []
-#     for filename in os.listdir(directory):
-#         if filename.endswith(".jpg") or filename.endswith(".png"):  
-#             filepath = os.path.join(directory, filename)
-#             try:
-#                 with Image.open(filepath) as img:
-#                     image_list.append((filename, img.size))
-#             except IOError:
-#                 print(f"Unable to open image file: {filename}")
-#     return image_list
-
-# def get_image_list(directory):
-#     image_list = []
-#     for filename in os.listdir(directory):
-#         if filename.endswith((".jpg", ".png", ".svg")):  
-#             filepath = os.path.join(directory, filename)
-#             if filename.endswith(".svg"):
-#                 # For SVG files, you can't get dimensions easily without additional libraries.
-#                 # You can store a placeholder dimension or read the SVG file to get dimensions if necessary.
-#                 image_list.append((filename, (0, 0)))
-#             else:
-#                 try:
-#                     with Image.open(filepath) as img:
-#                         image_list.append((filename, img.size))
-#                 except IOError:
-#                     print(f"Unable to open image file: {filename}")
-#     return image_list
 def get_image_list(directory):
     image_list = []
     for filename in os.listdir(directory):
         if filename.endswith((".svg")):  
             filepath = os.path.join(directory, filename)
             if filename.endswith(".svg"):
-                image_list.append((filename, (0, 0)))  # Placeholder for SVG dimensions
+                image_list.append((filename, (0, 0))) 
             else:
                 try:
                     with Image.open(filepath) as img:
