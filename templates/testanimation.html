@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Frame-based Rotation Animation with Timeline</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    .controls {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .controls input, .controls button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    .timeline {
+      width: 100%;
+      max-width: 1058px; /* Adjust as per your timeline width */
+      height: 61px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .timeline svg {
+      width: 100%;
+      height: 100%;
+    }
+    .keyframe {
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      position: absolute;
+      top: 0;
+      transform: translateY(-50%);
+    }
+    .currentTimeDisplay {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <svg id="animatedSVG" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Outer Circle -->
+    <circle cx="50" cy="50" r="45" stroke="blue" stroke-width="5" fill="none"/>
+
+    <!-- Rotating Line -->
+    <line id="rotatingLine" x1="50" y1="50" x2="50" y2="20" stroke="blue" stroke-width="5"/>
+  </svg>
+
+  <div class="controls">
+    <input type="number" id="timeInput" placeholder="Enter time in seconds" step="0.1" min="0"/>
+    <input type="number" id="angleInput" placeholder="Enter rotation angle in degrees"/>
+    <button id="addKeyframeButton">Add Keyframe</button>
+    <button id="startAnimationButton">Start Animation</button>
+    <button id="pauseAnimationButton">Pause Animation</button>
+    <button id="resumeAnimationButton">Resume Animation</button>
+  </div>
+
+  <div class="timeline">
+    <svg width="100%" height="100%" x="0" y="0">
+      <defs>
+        <pattern id="pattern-timeline-ruler" x="8" y="0" width="100" height="61" patternUnits="userSpaceOnUse">
+          <path d="M 0 61 v -36.6M 10 61 v -15.25M 20 61 v -15.25M 30 61 v -15.25M 40 61 v -15.25M 50 61 v -30.5M 60 61 v -15.25M 70 61 v -15.25M 80 61 v -15.25M 90 61 v -15.25M 100 61 v -36.6"></path>
+        </pattern>
+      </defs>
+      <rect x="0" y="0" width="1058" height="61" fill="#2d313c" stroke="none" pointer-events="none"></rect>
+      <rect x="0" y="0" width="100%" height="100%" fill="url(#pattern-timeline-ruler)" pointer-events="all"></rect>
+      <text id="timeline-tick-text" y="1">
+        <tspan x="0">0s</tspan>
+        <tspan x="100">1s</tspan>
+        <tspan x="200">2s</tspan>
+        <tspan x="300">3s</tspan>
+        <tspan x="400">4s</tspan>
+        <tspan x="500">5s</tspan>
+        <tspan x="600">6s</tspan>
+        <tspan x="700">7s</tspan>
+        <tspan x="800">8s</tspan>
+        <tspan x="900">9s</tspan>
+        <tspan x="1000">10s</tspan>
+        <tspan x="1100">11s</tspan>
+        <tspan x="1200">12s</tspan>
+      </text>
+      <g data-v-4123aee2="">
+        <line data-v-4123aee2="" x1="1058" y1="0" x2="1058" y2="61" stroke="transparent" stroke-width="6" class="end-time-guide"></line>
+        <line data-v-4123aee2="" x1="1058" y1="0" x2="1058" y2="61" stroke="#FFF" stroke-width="2" class="end-time"></line>
+      </g>
+    </svg>
+  </div>
+
+  <div class="footer">
+    <div class="timeline-container">
+      <svg width="100%" height="100%" x="0" y="0">
+        <!-- Placeholder for additional SVG content if needed -->
+      </svg>
+      <div class="currentTimeDisplay" id="currentTimeDisplay">0s</div>
+    </div>
+  </div>
+
+  <script>
+    const timeInput = document.getElementById('timeInput');
+    const angleInput = document.getElementById('angleInput');
+    const addKeyframeButton = document.getElementById('addKeyframeButton');
+    const startAnimationButton = document.getElementById('startAnimationButton');
+    const pauseAnimationButton = document.getElementById('pauseAnimationButton');
+    const resumeAnimationButton = document.getElementById('resumeAnimationButton');
+    const rotatingLine = document.getElementById('rotatingLine');
+    const timeline = document.querySelector('.timeline svg');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+
+    let keyframes = [];
+    let animationStartTime = null;
+    let paused = false;
+    let pauseTime = 0;
+
+    addKeyframeButton.addEventListener('click', () => {
+      const time = parseFloat(timeInput.value);
+      const angle = parseFloat(angleInput.value);
+
+      if (!isNaN(time) && !isNaN(angle)) {
+        keyframes.push({ time, angle });
+        keyframes.sort((a, b) => a.time - b.time);
+        addKeyframeToTimeline(time);
+        timeInput.value = '';
+        angleInput.value = '';
+        alert(`Keyframe added at ${time}s: ${angle} degrees`);
+      } else {
+        alert('Please enter valid time and angle values.');
+      }
+    });
+
+    startAnimationButton.addEventListener('click', () => {
+      if (keyframes.length > 0) {
+        animationStartTime = Date.now();
+        animate();
+      } else {
+        alert('Please add keyframes before starting the animation.');
+      }
+    });
+
+    pauseAnimationButton.addEventListener('click', () => {
+      paused = true;
+      pauseTime = Date.now();
+    });
+
+    resumeAnimationButton.addEventListener('click', () => {
+      if (paused) {
+        const elapsedPauseTime = (Date.now() - pauseTime) / 1000;
+        keyframes = keyframes.map(keyframe => ({ time: keyframe.time + elapsedPauseTime, angle: keyframe.angle }));
+        animationStartTime = Date.now() - (elapsedPauseTime * 1000);
+        paused = false;
+        animate();
+      }
+    });
+
+    function getCurrentTime() {
+      return (Date.now() - animationStartTime) / 1000;
+    }
+
+    function animate() {
+      if (!paused) {
+        const elapsedTime = getCurrentTime();
+
+        let keyframeIndex = 0;
+        while (keyframeIndex < keyframes.length - 1 && keyframes[keyframeIndex + 1].time <= elapsedTime) {
+          keyframeIndex++;
+        }
+
+        if (keyframeIndex < keyframes.length - 1) {
+          const startTime = keyframes[keyframeIndex].time;
+          const endTime = keyframes[keyframeIndex + 1].time;
+          const startAngle = keyframes[keyframeIndex].angle;
+          const endAngle = keyframes[keyframeIndex + 1].angle;
+
+          const progress = (elapsedTime - startTime) / (endTime - startTime);
+          const interpolatedAngle = startAngle + (endAngle - startAngle) * progress;
+
+          rotatingLine.setAttribute('transform', `rotate(${interpolatedAngle} 50 50)`);
+          updateCurrentTimeDisplay(elapsedTime);
+        } else {
+          paused = true;
+        }
+
+        if (elapsedTime < getTotalTime() && elapsedTime >= 0) {
+          requestAnimationFrame(animate);
+        }
+      }
+    }
+
+    function updateCurrentTimeDisplay(time) {
+      currentTimeDisplay.textContent = `${time.toFixed(1)}s`;
+    }
+
+    function addKeyframeToTimeline(time) {
+      const timelineWidth = timeline.offsetWidth;
+      const keyframePosition = (time / getTotalTime()) * timelineWidth;
+      const keyframeElement = document.createElement('div');
+      keyframeElement.className = 'keyframe';
+      keyframeElement.style.left = `${keyframePosition}px`;
+      timeline.appendChild(keyframeElement);
+    }
+
+    function getTotalTime() {
+      return Math.max(...keyframes.map(keyframe => keyframe.time), 10);
+    }
+  </script>
+
+</body>
+</html>

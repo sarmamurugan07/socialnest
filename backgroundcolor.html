@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Container with Background Color</title>
+</head>
+<body>
+    <div class="image-container position-relative" id="imageContainer">
+        <img id="background-image" src="/static/img/result.png" alt="Background">
+        <div id="uploadedImage" style="display: none;"></div>
+    </div>
+    <form id="colorForm">
+        <label for="color">Change Background Color:</label>
+        <input type="color" id="color" name="color" value="#ffffff" onchange="changeBackgroundColor()">
+    </form>
+    <form id="uploadForm">
+        <label for="upload">Upload Image:</label>
+        <input type="file" id="upload" accept="image/*">
+    </form>
+    <button onclick="downloadImage()">Download Image</button>
+
+    <script>
+        function changeBackgroundColor() {
+            var color = document.getElementById('color').value;
+            document.getElementById('imageContainer').style.backgroundColor = color;
+        }
+
+        var image = new Image();
+
+        function downloadImage() {
+            var container = document.getElementById('imageContainer');
+            var canvas = document.createElement('canvas');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            var ctx = canvas.getContext('2d');
+            var bgColor = getComputedStyle(container).backgroundColor;
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            var img = document.getElementById('background-image');
+            var uploadedImg = document.getElementById('uploadedImage');
+
+            if (uploadedImg.firstChild instanceof HTMLImageElement) {
+                ctx.drawImage(uploadedImg.firstChild, 0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            var dataURL = canvas.toDataURL('image/png');
+            var link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'image_with_background.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('upload').addEventListener('change', function(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                image.onload = function() {
+                    var uploadedImg = document.getElementById('uploadedImage');
+                    uploadedImg.innerHTML = '';
+                    uploadedImg.appendChild(image);
+                    uploadedImg.style.display = 'block';
+                    var imageContainer = document.getElementById('imageContainer');
+                    imageContainer.style.width = image.width + 'px';
+                    imageContainer.style.height = image.height + 'px';
+                };
+                image.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f0f0f0;
+        }
+        .image-container {
+            display: inline-block;
+            position: relative;
+            background-color: #ffffff;
+            z-index: 10;
+        }
+        #background-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        #uploadedImage img {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: -1;
+        }
+    </style>
+</body>
+</html>

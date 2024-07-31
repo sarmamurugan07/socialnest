@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG to PNG Conversion</title>
+  </head>
+  <body>
+    <!-- <input type="file" id="upload"  />
+    <canvas id="canvas"></canvas>
+    <a id="downloadLink" >Download PNG</a>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; align-items: center justify-content-center">
+      {% for filename, size in images %}
+      <a id="downloadLink" style="display: none" accept="image/svg+xml">Download PNG</a>
+          <div style="width: 200px; height: 200px; display: flex; flex-direction: column; align-items: center;">
+              <img src="{{ url_for('static', filename='img/' + filename) }}" alt="{{ filename }}" style="max-width: 100%; max-height: 100%;">
+              <p>{{ filename }} - {{ size[0] }}x{{ size[1] }}</p>
+          </div>
+      {% endfor %}
+  </div> -->
+    <!-- <script>
+      document
+        .getElementById("upload")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            const svgData = e.target.result;
+            const image = new Image();
+            image.onload = function () {
+              const canvas = document.getElementById("canvas");
+              canvas.width = image.width;
+              canvas.height = image.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(image, 0, 0);
+
+              // Convert canvas to PNG
+              const pngData = canvas.toDataURL("image/png");
+
+              // Create a link to download the PNG
+              const downloadLink = document.getElementById("downloadLink");
+              downloadLink.href = pngData;
+              downloadLink.download = "converted_image.png";
+           
+              downloadLink.textContent = "Download PNG";
+            };
+            image.src = svgData;
+          };
+
+          reader.readAsDataURL(file);
+        });
+    </script> -->
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; align-items: center; justify-content: center;">
+      {% for filename, size in images %}
+          {% if filename.endswith('.svg') %}
+              <div style="width: 200px; height: 200px; display: flex; flex-direction: column; align-items: center;">
+                  <img src="{{ url_for('static', filename='img/' + filename) }}" alt="{{ filename }}" 
+                       style="max-width: 100%; max-height: 100%;" data-filename="{{ filename }}">
+                  <p>{{ filename }} - {{ size[0] }}x{{ size[1] }}</p>
+              </div>
+          {% endif %}
+      {% endfor %}
+  </div>
+  
+  <a id="downloadLink" style="display: none;">Download SVG</a>
+    <script>
+      // Function to handle SVG image click and download
+      document.querySelectorAll('img[data-filename$=".svg"]').forEach(img => {
+          img.addEventListener('click', function(event) {
+              const filename = event.target.getAttribute('data-filename');
+              const url = "{{ url_for('static', filename='img/') }}" + filename;
+  
+              const downloadLink = document.getElementById('downloadLink');
+              downloadLink.href = url;
+              downloadLink.download = filename;
+              downloadLink.style.display = 'block';
+              reader.onload = function (e) {
+            const svgData = e.target.result;
+            const image = new Image();
+            image.onload = function () {
+              const canvas = document.getElementById("canvas");
+              canvas.width = image.width;
+              canvas.height = image.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(image, 0, 0);
+
+              // Convert canvas to PNG
+              const pngData = canvas.toDataURL("image/png");
+
+              // Create a link to download the PNG
+              const downloadLink = document.getElementById("downloadLink");
+              downloadLink.href = pngData;
+              downloadLink.download = "converted_image.png";
+           
+              downloadLink.textContent = "Download PNG";
+            };
+            image.src = svgData;
+          };
+
+          reader.readAsDataURL(file);
+          });
+      });
+  </script>
+  </body>
+</html>
